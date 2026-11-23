@@ -1,0 +1,12 @@
+<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 分享归因需部署正式服务后验证</view>
+<view class="page">
+  <view class="invite-card"><text class="invite-kicker">给同行的一封挑战书</text><view class="invite-title"><view>你的项目，</view><view>还能救吗？</view></view><view class="invite-score"><text>6</text><view><view>个回合</view><view>等你接管</view></view></view><text class="invite-copy">调资源 · 解阻塞 · 和 AI 比策略</text><view class="invite-footer">项目急救局 / 完成挑战领实用工具包</view></view>
+  <button wx:if="{{ready}}" class="primary full" open-type="share">发给微信好友 / 群</button><button wx:else class="primary full" bindtap="load" loading="{{loading}}" disabled="{{loading}}">{{loading ? '正在准备邀请卡…' : '准备邀请卡'}}</button>
+  <text class="footer-note">自愿邀请。无需拉人解锁，也不要求分享到群。好友通过你的卡片首次进入，才计为新增到访。</text>
+  <view wx:if="{{error}}" class="error mt">{{error}}<button class="link" bindtap="load">重新加载</button></view>
+  <view class="card mt"><view class="row between"><text class="h2">我的邀请效果</text><button class="link" bindtap="refresh">刷新</button></view><text class="small muted">{{isDemo ? '演示不生成虚假新增，以下数值保持为 0。' : '按本活动的独立微信用户去重统计。'}}</text>
+    <view wx:if="{{stats}}" class="stat-grid mt"><view class="stat-box"><text class="value">{{stats.arrivals}}</text><text class="label">新增到访</text></view><view class="stat-box"><text class="value">{{stats.finishes}}</text><text class="label">完成挑战</text></view></view>
+    <view wx:if="{{stats}}" class="stat-grid mt"><view class="stat-box"><text class="value">{{stats.claims}}</text><text class="label">领取资料</text></view><view class="stat-box"><text class="value">{{stats.requests}}</text><text class="label">主动咨询</text></view></view>
+    <text class="footer-note">不展示好友身份或手机号。新增到访是“活动新访客”，是否为企业净新客户需在客户系统中去重。</text>
+  </view>
+</view>

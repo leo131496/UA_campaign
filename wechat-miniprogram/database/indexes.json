@@ -1,0 +1,8 @@
+{
+  "note": "Configuration reference; create these indexes in the Cloud Development database console. Not an automatic import file.",
+  "collections": ["ua_campaigns", "ua_visitors", "ua_sessions", "ua_invites", "ua_claims", "ua_leads", "ua_stats", "ua_outbox"],
+  "indexes": [
+    { "collection": "ua_outbox", "name": "tenant_due_events", "fields": [ { "field": "tenantId", "order": "asc" }, { "field": "state", "order": "asc" }, { "field": "nextAttemptAt", "order": "asc" } ] },
+    { "collection": "ua_sessions", "name": "session_retention", "fields": [ { "field": "createdAt", "order": "asc" } ] }
+  ]
+}

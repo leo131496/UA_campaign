@@ -1,0 +1,31 @@
+<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 无真实获客数据 · 无需手机号</view>
+<view class="page">
+  <view wx:if="{{loading}}" class="loading">正在准备挑战…</view>
+  <view wx:if="{{error}}" class="error">{{error}}<button class="link" bindtap="load">重新加载</button></view>
+  <block wx:if="{{campaign && !loading}}">
+    <text class="brand">{{campaign.brand}}</text>
+    <view class="hero">
+      <view class="hero-top"><text class="eyebrow">MISSION / 06</text><text class="badge">AI 策略挑战</text></view>
+      <text class="hero-title">项目急救局</text>
+      <text class="hero-copy">{{campaign.subtitle}}</text>
+      <view class="map">
+        <view class="map-line"></view>
+        <view class="station blocked"><text class="station-icon">!</text><text>发现阻塞</text><text class="station-sub">等待你的指令</text></view>
+        <view class="station"><text class="station-icon">↗</text><text>调度资源</text><text class="station-sub">每一步都算数</text></view>
+        <view class="station"><text class="station-icon">✓</text><text>救回项目</text><text class="station-sub">拿走实用工具</text></view>
+      </view>
+      <view class="hero-foot"><text>6 回合</text><text>6 张资源卡</text><text>约 3 分钟</text></view>
+    </view>
+    <button class="primary full" bindtap="play">接管项目 →</button>
+    <text class="under-button">直接开玩 · 无需填写企业或联系方式</text>
+    <view class="card mt">
+      <view class="row between"><text class="h2">玩一局，带走一份工具</text><text class="gift-mark">↗</text></view>
+      <text class="copy small">{{campaign.benefitTitle}}：启动清单、风险会议要点、可复制模板。完成一局即可领取，输赢都可以。</text>
+      <view class="divider"></view>
+      <view class="row between"><text class="small muted">AI 会根据你的局面给建议</text><text class="pill">动态试算</text></view>
+    </view>
+    <view class="button-row"><button class="ghost" bindtap="invite">邀请同行挑战</button><button class="ghost" bindtap="mine">我的资料</button></view>
+    <text class="footer-note">参与会记录活动标识、邀请来源及游戏记录，用于提供服务与活动统计。咨询和营销由你另行选择。</text>
+    <button class="link" bindtap="privacy">查看信息使用说明</button>
+  </block>
+</view>

@@ -1,0 +1,12 @@
+<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 无真实获客数据</view>
+<view class="page">
+  <block wx:if="{{result}}">
+    <view class="result-hero"><text class="result-symbol">{{result.status === 'won' ? '✓' : '↻'}}</text><text class="title">{{result.status === 'won' ? '项目，救回来了。' : '这次差一点。'}}</text><text class="muted copy">{{result.status === 'won' ? '你的每一次调度，让交付向前了一步。' : '预算、阻塞、自动化，再换个策略试试。'}}</text></view>
+    <view class="card"><view class="row between"><view><text class="brand">你的策略得分</text><text class="score">{{result.score}}</text></view><view class="baseline"><text class="brand">同关 AI 参考</text><text class="h2">{{result.aiScore}}</text><text class="tiny muted">{{result.aiStatus === 'won' ? '完成交付' : '未完成交付'}}</text></view></view><view class="divider"></view><view class="row between small"><text>剩余预算 {{result.budget}}</text><text>最终风险 {{result.risk}}</text><text>第 {{result.round}} 回合</text></view></view>
+    <view class="card"><text class="h2">把游戏里的思路，带回工作</text><text class="copy small muted">你已完成挑战，可以领取项目启动清单、风险会议要点和可复制模板。</text><button class="primary full mt" bindtap="claim" disabled="{{busy}}" loading="{{busy}}">领取项目启动工具包</button><text class="footer-note">无需分享或授权手机号，输赢均可领取。</text></view>
+    <view wx:if="{{error}}" class="error">{{error}}</view>
+    <view class="button-row"><button class="secondary" bindtap="invite">邀请同行来挑战</button><button class="ghost" bindtap="again">再试一局</button></view>
+    <text class="footer-note">AI 参考分由本机搜索生成，不是线上排行榜。游戏成绩不代表真实业务能力或采购意向。</text>
+  </block>
+  <view wx:else class="empty">暂无挑战结果<button class="primary mt" bindtap="home">去活动首页</button></view>
+</view>

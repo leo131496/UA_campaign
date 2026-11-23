@@ -1,0 +1,22 @@
+<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 使用虚拟身份，不索取真实手机号</view>
+<view class="page"><view wx:if="{{loading}}" class="loading">正在加载…</view><view wx:if="{{error}}" class="error">{{error}}<button wx:if="{{!campaign}}" class="link" bindtap="load">重新加载</button></view>
+  <block wx:if="{{campaign && !loading}}">
+    <view wx:if="{{lead}}" class="card"><text class="pill green">{{isDemo ? '已保存演示申请' : '已登记咨询申请'}}</text><text class="title mt">让沟通有个起点。</text><text class="copy">咨询主题：{{lead.topic}}</text><text class="copy small muted">{{lead.maskedPhone}} · {{lead.syncLabel}}</text><text class="footer-note">{{isDemo ? '这条申请仅保存在本机，活动方不会收到，也不会联系你。' : '接收状态可在“我的资料”中刷新查看。登记不代表已取得联系。'}}</text><button class="secondary mt full" bindtap="mine">查看我的申请</button></view>
+    <block wx:else>
+      <text class="brand">主动咨询 / 完全自愿</text><text class="title mt">从一个具体问题聊起</text><text class="copy muted">选择你想讨论的方向。活动方将使用你授权的手机号，就本次咨询联系你。</text>
+      <view class="chips"><button wx:for="{{campaign.topics}}" wx:key="*this" class="chip {{topic === item ? 'active' : ''}}" data-topic="{{item}}" bindtap="choose" disabled="{{busy}}">{{item}}</button></view>
+      <view class="card">
+        <text class="h3">信息由你决定</text><button class="link" bindtap="privacy">阅读本次咨询的信息使用说明</button>
+        <checkbox-group data-field="serviceConsent" bindchange="consent"><label class="check"><checkbox value="yes" checked="{{serviceConsent}}" disabled="{{busy}}" color="#e88a68"/><text>我已阅读说明，同意活动方使用我授权的手机号及所选主题处理本次咨询，并同步至其客户管理系统。</text></label></checkbox-group>
+        <view class="divider"></view><text class="tiny muted">以下两项均为可选，默认不勾选</text>
+        <checkbox-group wx:if="{{canShareRecap}}" data-field="shareRecap" bindchange="consent"><label class="check"><checkbox value="yes" checked="{{shareRecap}}" disabled="{{busy}}" color="#6f98ca"/><text>附上本次游戏的得分、交付状态、预算与风险，供沟通参考。</text></label></checkbox-group>
+        <checkbox-group data-field="marketing" bindchange="consent"><label class="check"><checkbox value="yes" checked="{{marketing}}" disabled="{{busy}}" color="#6f98ca"/><text>愿意接收活动方后续服务推荐。可在“我的资料”撤回。</text></label></checkbox-group>
+      </view>
+      <button wx:if="{{isDemo}}" class="primary full" bindtap="demoSubmit" loading="{{busy}}" disabled="{{busy}}">用虚拟身份演示提交</button>
+      <button wx:elif="{{!privacyReady}}" class="primary full" bindtap="preparePhone" loading="{{busy}}" disabled="{{busy || !topic || !serviceConsent}}">确认信息使用说明并继续</button>
+      <button wx:else class="primary full" open-type="getPhoneNumber" bindgetphonenumber="phone" loading="{{busy}}" disabled="{{busy || !topic || !serviceConsent}}">授权手机号并提交咨询</button>
+      <text class="footer-note">不授权也能继续游戏、领取工具包和自愿分享。不会自动添加企业微信好友。</text>
+    </block>
+    <view wx:if="{{campaign.customerService}}" class="card mt"><text class="h3">也可以主动进入企业微信客服</text><text class="copy small muted">这是独立的客服会话入口，是否发起沟通由你决定。</text><button class="ghost mt full" bindtap="service">进入企业微信客服</button></view>
+  </block>
+</view>

@@ -1,0 +1,1 @@
+{"triggers":[{"name":"outbox-every-minute","type":"timer","config":"0 */1 * * * * *"}]}

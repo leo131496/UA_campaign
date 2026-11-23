@@ -1,0 +1,22 @@
+{
+  "pages": [
+    "pages/activity/index", "pages/game/index", "pages/result/index",
+    "pages/benefit/index", "pages/invite/index", "pages/contact/index", "pages/me/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "项目急救局",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f7fa",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8a98ac", "selectedColor": "#ed6b45", "backgroundColor": "#ffffff",
+    "list": [
+      { "pagePath": "pages/activity/index", "text": "活动" },
+      { "pagePath": "pages/me/index", "text": "我的资料" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

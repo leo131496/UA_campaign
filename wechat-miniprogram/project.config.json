@@ -1,0 +1,10 @@
+{
+  "description": "项目急救局：微信原生 B2B 活动与获客小程序",
+  "projectname": "UA_campaign_miniprogram",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": { "es6": true, "minified": true, "urlCheck": true },
+  "packOptions": { "ignore": [] }
+}

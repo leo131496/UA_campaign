@@ -1,0 +1,11 @@
+{
+  "name": "ua-campaign-native-wechat",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "check": "node scripts/check.cjs",
+    "check:release": "node scripts/check.cjs --release"
+  }
+}

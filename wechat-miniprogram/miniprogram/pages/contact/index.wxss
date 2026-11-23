@@ -1,0 +1,1 @@
+.chips .chip{flex-grow:1}.check:last-child{margin-bottom:8rpx}

@@ -1,0 +1,1 @@
+{"desc":"只公开活动入口；个人权益与结果不索引","rules":[{"action":"allow","page":"pages/activity/index"},{"action":"disallow","page":"*"}]}

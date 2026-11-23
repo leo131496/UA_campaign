@@ -1,0 +1,1 @@
+.check-item{display:flex;gap:18rpx;color:#74869e;font-size:25rpx;line-height:1.9;margin-top:22rpx}.check-square{color:#9bb3d3;flex:none;font-size:29rpx}
