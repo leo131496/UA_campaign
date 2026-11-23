@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const spot=require('../wechat-miniprogram/miniprogram/lib/spot');
-const base=process.env.DEMO_BASE_URL||'http://127.0.0.1:8771/',output=process.env.DEMO_SCREENSHOTS||'/tmp/ua-phone-preview';
+const base=process.env.DEMO_BASE_URL||'http://127.0.0.1:8771/spot-preview.html',output=process.env.DEMO_SCREENSHOTS||'/tmp/ua-phone-preview';
 fs.mkdirSync(output,{recursive:true});
 (async()=>{const browser=await chromium.launch({headless:true});try{
  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),page=await context.newPage(),errors=[];

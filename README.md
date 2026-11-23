@@ -1,31 +1,25 @@
-# 默契找茬局 · 给客户玩的好友挑战
+# SCRM 小游戏活动生成平台 · 两套可交互设计稿
 
-**[点击直接玩手机 Demo](https://leo131496.github.io/UA_campaign/?v=5)**
+**[方向 A：配置生成型](https://leo131496.github.io/UA_campaign/studio/?mode=config)** · **[方向 B：AI 创作型](https://leo131496.github.io/UA_campaign/studio/?mode=ai)** · **[方案说明](https://leo131496.github.io/UA_campaign/studio/guide.html)**
 
-60 秒找出两张趣味插画的 5 处不同，AI 视觉助手在卡住时给出区域提示；邀请朋友玩同一关，看看双方最先注意到的细节有多合拍。
+面向企业的小游戏生产与运营平台：配置玩法与行业内容，或用 AI 创作入口描述活动，再进入统一的双端预览、版本发布和 SCRM 承接流程。客户手机端只玩游戏，自愿分享或了解品牌。
 
-游戏入口没有业务启动、团队管理或前置表单。企业的品牌露出、小礼物与自愿了解入口放在活动里，获客归因和客户跟进放在 SCRM 后台。
+本轮按用户要求交付两方向设计稿。3 种手机玩法（翻牌、收集、知识闯关）可实际试玩；行业内容可编辑；AI 为明确标示的示例解析器，尚未连接大模型。演示发布生成可跨设备打开的 H5 配置快照，小程序与 SCRM 显示待接入。
 
-- 真实可玩的找不同：计时、点错反馈、圈选、积分、三档差异大小。
-- 本地视觉 AI：像素差分、连通区域搜索、渐进提示；未调用大模型。
-- 好友默契：链接带同一关卡，朋友独立玩完后生成双方结果，可继续邀请其他朋友。
-- 微信原生代码与手机在线预览共用页面和规则。
-- 服务端提供邀请码归因、结果重放、小礼物领取、独立授权与 SCRM 待同步队列。
+## 可体验
 
-**[产品与交互方案](wechat-miniprogram/docs/产品与交互方案.md) · [小程序开发交付](wechat-miniprogram/README.md) · [接口与数据](wechat-miniprogram/docs/接口与数据说明.md)**
+- 8 类行业起点与自定义内容，品牌与素材文案即时预览。
+- 3 种不同规则的小游戏，计时、得分、结算和同关挑战。
+- AI 需求示例、方案修改、能力缺口提示、复制到配置编辑器。
+- A/B 独立草稿，演示发布、版本恢复、手机独立链接。
+- 当前浏览器实际演示行为统计；有效线索、商机不虚构。
 
-在线版为可玩演示。好友对比结果实际计算，但链接数据属于自报；微信授权、真实获客统计和 BesChannels 尚未接通。
+[详细方案与开发边界](docs/platform-design/平台方案与开发边界.md) · [设计决策](docs/platform-design/设计决策.md)
 
-## 开发与检查
+`studio/` 是本轮新平台的交互设计。`wechat-miniprogram/` 保留上一版原生找茬实现，新平台三种引擎尚未移植至原生小程序。[上一版单游戏演示](https://leo131496.github.io/UA_campaign/spot-preview.html)。
 
-微信开发者工具导入 `wechat-miniprogram/`。原生页面更新后，在仓库根目录执行：
+## 本地预览
 
-```bash
-node phone-demo/build.cjs
-node phone-demo/build.cjs --check
-cd wechat-miniprogram
-npm test
-npm run check
-```
+在仓库根目录运行静态文件服务，打开 `/studio/?mode=config` 或 `/studio/?mode=ai`。不需要依赖安装或密钥。Playwright 浏览器验收见 `tests/studio.test.cjs`；纯模型检查见 `tests/studio-model.test.cjs`。
 
-浏览器双人流程检查见 [在线预览说明](phone-demo/README.md)。`game/legacy-web.html` 和旧版策略引擎保留历史原型，不是当前玩法。
+原有微信原生项目的开发说明、规则测试与历史方案仍保留在各自目录。本设计未修改 BesChannels 真实系统。

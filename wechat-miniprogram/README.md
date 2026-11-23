@@ -1,6 +1,6 @@
 # 默契找茬局 · 微信原生开发交付
 
-**[先打开手机 Demo](https://leo131496.github.io/UA_campaign/?v=5)**
+**[先打开手机 Demo](https://leo131496.github.io/UA_campaign/spot-preview.html?v=5)**
 
 给客户玩的轻松小游戏：60 秒找不同 → AI 视觉提示 → 邀请好友同关挑战 → 生成双人合拍结果 → 自愿领取品牌小礼或了解服务。没有企业业务管理任务。
 
