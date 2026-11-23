@@ -8,7 +8,7 @@ Page({
     this.setData({ loading: true, error: '' });
     try {
       const mine = await api.call('getMyActivity', { campaignId: ui.campaignId() });
-      this.result = getApp().globalData.lastGame || wx.getStorageSync('ua-result-' + ui.campaignId());
+      this.result = getApp().globalData.lastGame || wx.getStorageSync('ua-spot-result-' + ui.campaignId());
       this.setData({ campaign: mine.campaign, loading: false, canShareRecap: !!(this.result && this.result.campaignId === ui.campaignId()),
         lead: mine.lead ? { ...mine.lead, syncLabel: ui.syncLabel(mine.lead.syncState) } : null });
     } catch (e) { api.error(this, e); }

@@ -1,9 +1,9 @@
-<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 工具包内容可直接使用</view>
-<view class="page"><view wx:if="{{loading}}" class="loading">正在打开工具包…</view><view wx:if="{{error}}" class="error">{{error}}<button class="link" bindtap="load">重新加载</button></view>
-  <block wx:if="{{claim}}"><text class="pill green">已存入「我的资料」</text><text class="title mt">{{claim.title}}</text><text class="copy muted small mb">拿去开一次会，或复制到你的项目文档。</text>
+<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 灵感卡内容可直接使用</view>
+<view class="page"><view wx:if="{{loading}}" class="loading">正在打开小礼物…</view><view wx:if="{{error}}" class="error">{{error}}<button class="link" bindtap="load">重新加载</button></view>
+  <block wx:if="{{claim}}"><text class="pill green">已存入「我的小礼物」</text><text class="title mt">{{claim.title}}</text><text class="copy muted small mb">把喜欢的一条发给朋友，安排下一次小冒险。</text>
     <view wx:for="{{claim.sections}}" wx:for-item="section" wx:key="title" class="card"><text class="h3">{{section.title}}</text><view wx:for="{{section.items}}" wx:key="*this" class="check-item"><text class="check-square">□</text><text user-select="{{true}}">{{item}}</text></view></view>
-    <button class="secondary full" bindtap="copy">复制完整工具包</button>
-    <view class="card mt"><text class="h2">想用在自己的业务里？</text><text class="copy small muted">可选择一个具体主题，主动申请活动方联系。只有提交咨询时才需要手机号。</text><button class="primary full mt" bindtap="contact">我想聊聊业务问题</button></view>
-    <button class="ghost full" bindtap="invite">把挑战分享给同行</button>
-  </block><view wx:elif="{{!loading && !error}}" class="empty">完成一局挑战，即可领取工具包。<button class="primary mt" bindtap="home">去挑战</button></view>
+    <button class="secondary full" bindtap="copy">复制双人灵感卡</button>
+    <view class="card mt"><text class="h2">想认识一下这次活动的品牌？</text><text class="copy small muted">看看品牌的产品、体验或其他活动。是否留下联系方式，由你决定。</text><button class="primary full mt" bindtap="contact">了解品牌服务</button></view>
+    <button class="ghost full" bindtap="invite">把挑战分享给朋友</button>
+  </block><view wx:elif="{{!loading && !error}}" class="empty">玩一局，即可领取小礼物。<button class="primary mt" bindtap="home">去找不同</button></view>
 </view>

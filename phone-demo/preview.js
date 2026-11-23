@@ -55,9 +55,10 @@
     Promise.resolve(instance[handler]({ currentTarget: { dataset: { ...element.dataset } }, detail })).catch(showError);
   }
   function renderElement(node, target, scope, key) {
-    const tag = node.tagName.toLowerCase();
+    const originalTag = node.tagName.toLowerCase();
+    const tag = originalTag === 'img' ? 'image' : originalTag;
     if (tag === 'block') { renderChildren(node, target, scope, key); return; }
-    const element = document.createElement(tag), attrs = node.attributes;
+    const element = document.createElement(tag === 'image' ? 'img' : tag), attrs = node.attributes;
     element.dataset.previewKey = key;
     let checkbox;
     if (tag === 'checkbox') { checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.dataset.previewKey = key + '-input'; element.append(checkbox); }
@@ -65,6 +66,8 @@
       const name = attr.name;
       if (name.startsWith('wx:')) continue;
       const value = binding(attr.value, scope);
+      if (tag === 'image' && name === 'src') { element.src = value; element.alt = ''; element.draggable = false; continue; }
+      if (tag === 'image' && name === 'mode') { element.style.objectFit = value === 'aspectFill' ? 'cover' : 'contain'; continue; }
       if (name.startsWith('bind')) {
         const handler = attr.value;
         if (name === 'bindtap') element.addEventListener('click', event => { event.stopPropagation(); invoke(handler, element); });
@@ -163,7 +166,7 @@
     const payload = current && current.onShareAppMessage ? current.onShareAppMessage() : { path: '/pages/activity/index' };
     const target = routeOf(payload.path), url = new URL(location.href); url.search = ''; url.hash = 'activity';
     for (const [key, value] of Object.entries(target.query)) url.searchParams.set(key, value);
-    modal({ title: '邀请同行体验', content: '复制链接发给好友，即可打开这份手机 Demo。正式小程序中，这个按钮会打开微信分享卡片。演示不统计真实拉新。',
+    modal({ title: '邀请朋友，比比默契', content: '把链接发给朋友，朋友会玩你这局相同的图片。独立找完后，看看你们先发现的细节有多合拍。\n\n当前为演示链接，记录由链接携带，不统计真实获客。正式小程序使用微信分享卡片。',
       link: url.href, confirmText: '复制演示链接', cancelText: '返回', success: answer => { if (answer.confirm) clipboard(url.href); } });
   }
   const fallbackStorage = new Map();
@@ -188,7 +191,7 @@
   window.addEventListener('resize', resize); resize();
   document.querySelector('#back').onclick = () => history.state && history.state.depth > 0 ? history.back() : navigate('activity', {}, true);
   document.querySelectorAll('[data-tab]').forEach(button => { button.onclick = () => navigate(button.dataset.tab, {}, true); });
-  document.querySelector('#about').onclick = () => modal({ title: '手机端交互 Demo', content: '这份演示使用已交付小程序的页面和游戏逻辑，可体验挑战、工具包、邀请及虚拟咨询。\n\n当前在浏览器中预览，不是已发布的微信小程序。手机号、微信分享和 SCRM 均未真实接通，不会联系你。', showCancel: false });
+  document.querySelector('#about').onclick = () => modal({ title: '默契找茬局', content: '60 秒内找出两张图的 5 处不同，再邀请朋友玩同一关，揭晓前三个细节的趣味合拍结果。\n\nAI 助手实际执行本地图像差分和区域搜索，不调用大模型。当前是手机交互演示，微信授权和真实客户系统尚未接通。', showCancel: false });
   window.addEventListener('popstate', event => {
     const state = event.state || { screen: 'activity', query: {}, depth: 0 };
     sequence = state.depth || 0; navigate(state.screen, state.query, true, true);

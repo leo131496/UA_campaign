@@ -1,30 +1,13 @@
-<view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 游戏可玩，结果不会发送到 SCRM</view>
-<view class="page game-page">
-  <view wx:if="{{loading}}" class="loading">正在接管项目…</view>
-  <view wx:if="{{error}}" class="error">{{error}}
-    <view wx:if="{{!state}}" class="button-row"><button bindtap="start" class="link">重试</button><button bindtap="home" class="link">活动首页</button></view>
-  </view>
-  <block wx:if="{{state && !loading}}">
-    <view class="dashboard">
-      <view class="row between"><text class="round">回合 {{state.round}} / 6</text><text class="actions">本回合剩 {{state.actions}} 次行动</text></view>
-      <view class="hud"><view><text class="hud-label">可用预算</text><text class="hud-value">{{state.budget}}<text class="hud-unit">点</text></text></view><view><text class="hud-label">项目风险</text><text class="hud-value {{state.risk > 69 ? 'risk-high' : ''}}">{{state.risk}}<text class="hud-unit">/ 100</text></text></view><view class="goal"><text>交付目标</text><text>3 个模块</text><text>全部 ≥ 80</text></view></view>
-      <view class="event"><text class="event-dot">!</text><text>{{event.title}} · {{event.text}}</text></view>
-    </view>
-    <view class="board-title"><text>项目现场</text><text class="tiny muted">点资源卡 → 点模块</text></view>
-    <view class="modules"><button wx:for="{{nodes}}" wx:key="index" data-index="{{item.index}}" bindtap="target" class="module {{item.blocked ? 'blocked' : ''}} {{item.progress >= 80 ? 'complete' : ''}}" disabled="{{busy || aiBusy || state.status !== 'playing'}}">
-      <text class="module-no">0{{item.index + 1}}</text><text class="module-name">{{item.name}}</text><text class="module-state">{{item.label}}</text>
-      <view class="meter"><view class="fill" style="width:{{item.percent}}%"></view></view><text class="progress">{{item.progress}}<text class="tiny"> / 80</text></text>
-    </button></view>
-    <block wx:if="{{state.status === 'playing'}}">
-      <view class="board-title"><text>你的资源卡</text><text class="tiny muted">每次使用消耗 1 次行动</text></view>
-      <view class="deck"><button wx:for="{{cards}}" wx:key="id" data-id="{{item.id}}" bindtap="select" class="resource {{selected === item.id ? 'selected' : ''}} {{!item.affordable ? 'unaffordable' : ''}}" disabled="{{busy || aiBusy}}"><view class="row between"><text class="card-mark">{{item.mark}}</text><text class="cost">{{item.cost}} 点</text></view><text class="resource-name">{{item.name}}</text><text class="resource-short">{{item.short}}</text></button></view>
-      <view wx:if="{{selected}}" class="selection"><text class="h3">已选择 · {{selectedName}}</text><text>{{selectedDetail}} 点击上方模块使用。</text></view>
-      <view wx:if="{{hint}}" class="ai-hint">✦ {{hint}}</view>
-      <view class="button-row mt"><button class="secondary" bindtap="hint" disabled="{{aiBusy || busy}}" loading="{{aiBusy}}">AI 帮我想一步</button><button class="ghost" bindtap="pass" disabled="{{aiBusy || busy}}">结束本回合</button></view>
-    </block>
-    <button wx:else class="primary mt full" bindtap="submit" loading="{{busy}}" disabled="{{busy}}">{{busy ? '正在确认挑战结果…' : '重新提交本局结果'}}</button>
-    <view class="timeline"><view wx:for="{{log}}" wx:key="index" class="log"><text class="log-label">R{{item.round}} · {{item.title}}</text><text>{{item.detail}}</text></view></view>
-    <text class="footer-note">AI 在本机搜索可行策略，不调用大模型，也不保证最优解。预算归零不直接判负，可用“调配资源”补充。</text>
-    <button class="link" bindtap="restart" disabled="{{busy || aiBusy}}">放弃进度并重新开局</button>
-  </block>
+<view class="game-page">
+ <view wx:if="{{loading}}" class="loading">小细节就位，准备开找…</view><view wx:if="{{error}}" class="error">{{error}}<button class="link" bindtap="home">返回活动</button><button wx:if="{{state}}" class="link" bindtap="submit">重新提交结果</button></view>
+ <block wx:if="{{state && !loading}}">
+  <view class="game-top"><view><text class="scene-title">{{theme}}</text><text class="tiny muted">{{withFriend?'和朋友同一关 · 玩完揭晓合拍结果':'对比上下两张图，点击不一样的地方'}}</text></view><view class="timer {{time<=10?'urgent':''}}"><text>{{time}}</text><text class="tiny">秒</text></view></view>
+  <view class="progress-row"><text>已找到 {{foundCount}} / 5</text><view class="found-dots"><text wx:for="{{dots}}" wx:key="id" class="dot {{item.done?'done':''}}">{{item.done?'✓':'·'}}</text></view><text class="tiny muted">提示 {{state.hints}} / 3</text></view>
+  <view class="scene"><image src="{{imageA}}" class="scene-image" mode="aspectFit"/><text class="scene-badge">原图</text><button wx:for="{{objects}}" wx:key="id" class="hotspot {{item.found?'found':''}}" style="{{item.style}}" data-id="{{item.id}}" bindtap="tap" aria-label="原图 {{item.label}}" disabled="{{busy || aiBusy || state.status!=='playing'}}"><text wx:if="{{item.found}}" class="found-tick">✓</text></button></view>
+  <view class="scene second"><image src="{{imageB}}" class="scene-image" mode="aspectFit"/><text class="scene-badge">找不同</text><view wx:if="{{hintRegion}}" class="vision-region {{hintRegion}}"></view><button wx:for="{{objects}}" wx:key="id" class="hotspot {{item.found?'found':''}}" style="{{item.style}}" data-id="{{item.id}}" bindtap="tap" aria-label="找不同 {{item.label}}" disabled="{{busy || aiBusy || state.status!=='playing'}}"><text wx:if="{{item.found}}" class="found-tick">✓</text></button></view>
+  <view class="feedback" aria-live="polite">{{feedback || '两张图都可以点 · 点错扣 5 分'}}</view>
+  <view wx:if="{{hint}}" class="ai-clue">✦ {{hint}}</view>
+  <view class="game-actions"><button class="ai-button" bindtap="hint" loading="{{aiBusy}}" disabled="{{busy || aiBusy || state.status!=='playing'}}">✦ AI 帮我找 <text class="tiny">−15 分</text></button><button class="end-button" bindtap="finish" disabled="{{busy || aiBusy || state.status!=='playing'}}">揭晓结果</button></view>
+  <view wx:if="{{busy}}" class="loading">正在生成本局结果…</view>
+ </block>
 </view>

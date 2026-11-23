@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 const { parse, sharePath } = require('../miniprogram/lib/launch');
-const engine = require('../miniprogram/lib/engine');
+const engine = require('../miniprogram/lib/spot');
 const sample = require('../miniprogram/lib/sample');
 const config = require('../miniprogram/config');
 const api = require('../miniprogram/services/api');
@@ -28,7 +28,7 @@ function page(name) {
 }
 const settle = () => new Promise(r => setImmediate(r));
 test('launch parser handles direct links, QR scenes and malformed input', () => {
-  assert.deepEqual(parse({ scene: encodeURIComponent('i=abc123&c=campaign_2') }), { campaignId: 'campaign_2', inviteToken: 'abc123' });
+  assert.deepEqual(parse({ scene: encodeURIComponent('i=abc123&c=campaign_2') }), { campaignId: 'campaign_2', inviteToken: 'abc123', duel:'' });
   assert.equal(parse({ scene: '%E0%A4%A', invite: '../x', campaign: '<script>' }).inviteToken, '');
   assert.equal(parse({ campaign: '../private' }).campaignId, config.campaignId);
   assert.equal(sharePath('campaign_2', 'abc123'), '/pages/activity/index?campaign=campaign_2&invite=abc123');
@@ -40,24 +40,20 @@ test('native demo completes a real game, claims useful content, shares and keeps
   assert.equal(activity.data.campaign.id, sample.id);
   const game = page('game'); game.onLoad(); await settle();
   assert.equal(game.data.state.status, 'playing');
-  game.target({ currentTarget: { dataset: { index: 0 } } }); assert.match(game.data.error, /先点/);
-  const path = engine.solve(game.state, 24).path;
-  for (const move of path) {
-    if (move.card === 'pass') game.pass();
-    else { game.select({ currentTarget: { dataset: { id: move.card } } }); game.target({ currentTarget: { dataset: { index: move.target } } }); }
-  }
+  for(const id of game.state.changed) game.tap({currentTarget:{dataset:{id}}});
   await settle(); assert.equal(e.nav.at(-1), '/pages/result/index');
   const result = page('result'); result.onLoad(); assert(result.data.result.score > 0); await result.claim();
   const benefit = page('benefit'); benefit.onLoad(); await settle(); assert.equal(benefit.data.claim.sections.length, 3);
-  benefit.copy(); assert.match(wx.clipboard, /验收标准/);
+  benefit.copy(); assert.match(wx.clipboard, /朋友/);
   const invite = page('invite'); invite.onLoad(); await settle();
   assert.match(invite.onShareAppMessage().path, /invite=demo_local_only/);
-  assert.deepEqual(invite.data.stats, { arrivals: 0, finishes: 0, claims: 0, requests: 0 });
+  assert.match(invite.onShareAppMessage().path,/duel=/);
+  assert.deepEqual(await api.call('getPromotionStats',{}), { arrivals: 0, finishes: 0, claims: 0, requests: 0 });
   game.onUnload();
 });
 test('leaving and reopening the game restores the same local session and exact moves', async () => {
   environment(); const first = page('game'); first.onLoad(); await settle();
-  first.select({ currentTarget: { dataset: { id: 'repair' } } }); first.target({ currentTarget: { dataset: { index: 0 } } });
+  first.tap({currentTarget:{dataset:{id:first.state.changed[0]}}});
   first.onUnload(); const resumed = page('game'); resumed.onLoad(); await settle();
   assert.equal(resumed.session.sessionId, first.session.sessionId); assert.deepEqual(resumed.state, first.state); resumed.onUnload();
 });
@@ -65,7 +61,7 @@ test('warm entry consumes a new invitation without losing launch parameters', as
   const e = environment(), activity = page('activity'); activity.onLoad({}); await settle();
   e.app.globalData.pendingActivityOptions = { campaign: 'another-campaign', invite: 'abc123' };
   activity.onShow(); await settle();
-  assert.deepEqual(activity.entry, { campaignId: 'another-campaign', inviteToken: 'abc123' });
+  assert.deepEqual(activity.entry, { campaignId: 'another-campaign', inviteToken: 'abc123', duel:'' });
   assert.equal(e.app.globalData.pendingActivityOptions, null);
 });
 test('consultation defaults optional permissions off, needs consent, and records an explicit virtual demo', async () => {
@@ -91,7 +87,7 @@ test('cloud failures are reported and never silently create demo records', async
 test('every native page exists, contains only supported components, and binds existing handlers', () => {
   environment();
   const base = path.join(__dirname, '../miniprogram'), manifest = require('../miniprogram/app.json');
-  const allowed = new Set(['view', 'text', 'button', 'block', 'checkbox-group', 'checkbox', 'label']);
+  const allowed = new Set(['view', 'text', 'button', 'block', 'checkbox-group', 'checkbox', 'label', 'image']);
   for (const route of manifest.pages) {
     for (const ext of ['js', 'json', 'wxml', 'wxss']) assert(fs.existsSync(path.join(base, route + '.' + ext)), route + '.' + ext);
     const name = route.split('/')[1], instance = page(name), wxml = fs.readFileSync(path.join(base, route + '.wxml'), 'utf8');

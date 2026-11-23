@@ -1,10 +1,11 @@
 <view wx:if="{{isDemo}}" class="demo-strip">本地演示 · 记录只保存在当前设备</view>
-<view class="page"><view class="row between"><text class="title">我的资料</text><button class="link" bindtap="load">刷新</button></view>
+<view class="page"><view class="row between"><text class="title">我的小礼物</text><button class="link" bindtap="load">刷新</button></view>
   <view wx:if="{{loading}}" class="loading">正在加载…</view><view wx:if="{{error}}" class="error mt">{{error}}</view>
   <block wx:if="{{mine && !loading}}">
-    <view class="card mt"><text class="h2">我的工具包</text><block wx:if="{{mine.claim}}"><text class="copy">{{mine.claim.title}}</text><button class="secondary full mt" bindtap="benefit">打开工具包</button></block><block wx:else><text class="copy muted small">完成一局即可领取，输赢均可。</text><button class="secondary full mt" bindtap="home">去挑战</button></block></view>
+    <view wx:if="{{mine.duels.length}}" class="card mt"><text class="h2">我的合拍卡</text><text wx:if="{{isDemo}}" class="small muted">当前设备完成的演示结果</text><view wx:for="{{mine.duels}}" wx:key="id" class="duel-record"><view class="row between"><text class="h3">{{item.title}}</text><text wx:if="{{item.percent !== null}}" class="pill">{{item.percent}}%</text></view><text class="copy small muted">{{item.detail}}</text></view></view>
+    <view class="card mt"><text class="h2">我的品牌小礼</text><block wx:if="{{mine.claim}}"><text class="copy">{{mine.claim.title}}</text><button class="secondary full mt" bindtap="benefit">打开小礼物</button></block><block wx:else><text class="copy muted small">玩一局即可领取，不需要邀请朋友。</text><button class="secondary full mt" bindtap="home">去找不同</button></block></view>
     <view class="card"><text class="h2">我的咨询</text><block wx:if="{{mine.lead}}"><text class="copy">{{mine.lead.topic}}</text><text class="copy small muted">{{mine.lead.maskedPhone}}</text><text class="status copy">{{mine.lead.syncLabel}}</text><text class="footer-note">{{isDemo ? '演示记录不会同步，不会有人联系。' : '服务方接收不代表已经联系或成交。'}}</text><view class="divider"></view><text class="small">后续服务推荐：{{mine.lead.marketing ? '已授权' : '未授权 / 已撤回'}}</text><text wx:if="{{mine.lead.revocationState}}" class="copy small muted">撤回同步：{{mine.lead.revocationLabel}}</text><button wx:if="{{mine.lead.marketing}}" class="link" bindtap="revoke" disabled="{{busy}}">撤回后续推荐授权</button></block><text wx:else class="copy muted small">你还没有主动申请咨询。</text></view>
-    <button class="ghost full" bindtap="invite">查看我的邀请效果</button>
+    <button class="ghost full" bindtap="invite">邀请朋友比默契</button>
     <text class="footer-note">删除或查询个人信息，请联系活动运营方：{{mine.campaign.privacyContact}}</text><button class="link" bindtap="privacy">活动信息使用说明</button>
   </block>
 </view>

@@ -2,6 +2,6 @@
 module.exports = {
   mode: 'demo',
   cloudEnv: '',
-  campaignId: 'project-rescue-2026',
+  campaignId: 'spot-buddy-2026',
   functionName: 'campaign'
 };

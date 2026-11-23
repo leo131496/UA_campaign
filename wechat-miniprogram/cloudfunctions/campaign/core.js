@@ -1,6 +1,6 @@
 'use strict';
 const crypto = require('crypto');
-const engine = require('./engine');
+const engine = require('./spot');
 const digest = value => crypto.createHash('sha256').update(value).digest('hex').slice(0, 40);
 const key = (...parts) => digest(parts.join('|'));
 const ID = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -10,24 +10,14 @@ class BusinessError extends Error {
 function assert(condition, code, message) { if (!condition) throw new BusinessError(code, message); }
 function publicCampaign(c) {
   return { id: c._id, brand: c.brand, title: c.title, subtitle: c.subtitle,
-    modules: c.modules, benefitTitle: c.benefitTitle, topics: c.topics,
+    benefitTitle: c.benefitTitle, topics: c.topics,
     privacyVersion: c.privacyVersion, privacyText: c.privacyText,
     operatorName: c.operatorName, privacyContact: c.privacyContact,
     customerService: c.customerService || null, endsAt: c.endsAt };
 }
-function replay(seed, moves) {
-  assert(Array.isArray(moves) && moves.length > 0 && moves.length <= 12, 'MOVES', '行动记录不完整');
-  let state = engine.create(seed);
-  for (const move of moves) {
-    assert(move && typeof move.card === 'string' && Number.isInteger(move.target) && move.target >= 0 && move.target < 3,
-      'MOVES', '行动记录无效');
-    assert(state.status === 'playing', 'MOVES', '本局结束后不能继续行动');
-    const next = engine.advance(state, move);
-    assert(next, 'MOVES', '存在不符合游戏规则的行动');
-    state = next;
-  }
-  assert(state.status !== 'playing', 'UNFINISHED', '请先完成本局挑战');
-  return state;
+function replay(seed, level, events) {
+  try { return engine.replay(seed, level, events); }
+  catch (error) { throw new BusinessError('MOVES', error.message); }
 }
 function createService({ store, now = Date.now, random = n => crypto.randomBytes(n).toString('hex'),
   phone = async () => { throw new Error('手机号服务未配置'); } }) {
@@ -67,7 +57,8 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
         await tx.set('visitors', id, { campaignId: c._id, owner: uid, inviter, createdAt: now(), finished: false });
         await increment(tx, c._id, inviter, 'arrivals');
       });
-      return { campaign: publicCampaign(c) };
+      const host = inviter && token.sessionId ? await get('sessions', token.sessionId) : null;
+      return { campaign: publicCampaign(c), friend: host && host.result ? {seed:host.seed,level:host.level,foundCount:host.result.found.length,inviteToken:p.inviteToken}:null };
     },
     async startChallenge(p, uid) {
       const c = await campaign(p.campaignId), requestId = validId(p.requestId), id = key(c._id, uid, requestId);
@@ -77,17 +68,21 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
         const old = await tx.get('sessions', id);
         if (old) {
           assert(old.expiresAt > now() && !old.result, 'SESSION', '这局挑战已结束或过期，请重新开始');
-          return { sessionId: id, seed: old.seed, expiresAt: old.expiresAt };
+          return { sessionId: id, seed: old.seed, level: old.level, expiresAt: old.expiresAt };
         }
         const day = Math.floor(now() / 86400000);
         const count = visitor.day === day ? visitor.starts || 0 : 0;
         assert(count < (c.dailyPlayLimit || 30), 'LIMIT', '今天挑战次数已用完，明天再来');
         visitor.day = day; visitor.starts = count + 1;
         await tx.set('visitors', key(c._id, uid), visitor);
-        const session = { campaignId: c._id, owner: uid, seed: parseInt(random(3), 16) % 999999 + 1,
+        const invite = typeof p.inviteToken==='string' && /^[a-f0-9]{24}$/.test(p.inviteToken) ? await tx.get('invites', p.inviteToken) : null;
+        const host = invite && invite.owner!==uid && invite.campaignId===c._id && invite.expiresAt>now() ? await tx.get('sessions',invite.sessionId) : null;
+        const session = { campaignId: c._id, owner: uid, seed: host && host.result ? host.seed : parseInt(random(3), 16) % 999999 + 1,
+          level:host && host.result ? host.level : [0,1,2].includes(p.level)?p.level:1,
+          friendSessionId:host && host.result?invite.sessionId:'',
           createdAt: now(), expiresAt: now() + 2 * 3600000, result: null };
         await tx.set('sessions', id, session);
-        return { sessionId: id, seed: session.seed, expiresAt: session.expiresAt };
+        return { sessionId: id, seed: session.seed, level:session.level, expiresAt: session.expiresAt };
       });
     },
     async finishChallenge(p, uid) {
@@ -95,8 +90,8 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
       return store.transact(async tx => {
         const s = await tx.get('sessions', p.sessionId);
         assert(s && s.owner === uid, 'SESSION', '无法访问这局挑战');
-        assert(Array.isArray(p.moves) && p.moves.length > 0 && p.moves.length <= 12, 'MOVES', '行动记录不完整');
-        const moves = Array.isArray(p.moves) ? p.moves.map(m => m && ({ card: m.card, target: m.target })) : p.moves;
+        assert(Array.isArray(p.moves) && p.moves.length > 0 && p.moves.length <= 100, 'MOVES', '行动记录不完整');
+        const moves = p.moves.map(m => m && (m.type==='tap'?{type:m.type,id:m.id,at:m.at}:{type:m.type,at:m.at}));
         const signature = digest(JSON.stringify(moves) || '');
         if (s.result) {
           assert(s.signature === signature, 'CONFLICT', '该挑战已提交其他行动记录');
@@ -104,14 +99,23 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
         }
         assert(s.expiresAt > now(), 'EXPIRED', '挑战已过期，请重新开始');
         await campaign(s.campaignId, tx);
-        const state = replay(s.seed, moves);
+        const state = replay(s.seed, s.level, moves);
+        assert(state.elapsed <= now()-s.createdAt+2000, 'TIME', '挑战时间记录无效');
+        const host = s.friendSessionId ? await tx.get('sessions',s.friendSessionId) : null;
         const result = { sessionId: p.sessionId, campaignId: s.campaignId, seed: s.seed,
-          status: state.status, score: engine.score(state), budget: state.budget, risk: state.risk,
-          round: state.round, nodes: state.nodes, moves };
+          ...engine.summary(state), match:host && host.result?engine.match(host.result,state):null, moves };
         s.result = result; s.signature = signature; s.finishedAt = now();
         await tx.set('sessions', p.sessionId, s);
         const id = key(s.campaignId, uid), v = await tx.get('visitors', id);
-        if (!v.finished) { v.finished = true; await tx.set('visitors', id, v); await increment(tx, s.campaignId, v.inviter, 'finishes'); }
+        const firstFinish=!v.finished;
+        v.finished=true;
+        if(result.match) {
+          v.duels=(v.duels||[]).concat({id:p.sessionId,...result.match,createdAt:now()}).slice(-10);
+          const hostId=key(s.campaignId,host.owner),hostVisitor=await tx.get('visitors',hostId);
+          if(hostVisitor){hostVisitor.duels=(hostVisitor.duels||[]).concat({id:p.sessionId,...engine.match(state,host.result),createdAt:now()}).slice(-10);await tx.set('visitors',hostId,hostVisitor);}
+        }
+        if(firstFinish||result.match)await tx.set('visitors',id,v);
+        if(firstFinish)await increment(tx,s.campaignId,v.inviter,'finishes');
         return result;
       });
     },
@@ -138,12 +142,14 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
       return store.transact(async tx => {
         const v = await tx.get('visitors', id);
         assert(v, 'VISIT', '请先打开活动首页');
+        const session=await tx.get('sessions',validId(p.sessionId));
+        assert(session && session.owner===uid && session.campaignId===c._id && session.result,'FINISH','先玩一局，再邀请朋友比默契');
         if (v.inviteToken) {
           const old = await tx.get('invites', v.inviteToken);
-          if (old && old.expiresAt > now()) return { token: v.inviteToken };
+          if (old && old.expiresAt > now() && old.sessionId===p.sessionId) return { token: v.inviteToken };
         }
         const token = random(12);
-        await tx.set('invites', token, { owner: uid, campaignId: c._id, createdAt: now(), expiresAt: c.endsAt });
+        await tx.set('invites', token, { owner: uid, campaignId: c._id, sessionId:p.sessionId, createdAt: now(), expiresAt: c.endsAt });
         v.inviteToken = token; await tx.set('visitors', id, v);
         return { token };
       });
@@ -172,7 +178,7 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
       if (p.shareRecap) {
         const s = await get('sessions', p.sessionId);
         assert(s && s.owner === uid && s.campaignId === c._id && s.result, 'RECAP', '找不到可附上的本人挑战记录');
-        recap = { score: s.result.score, status: s.result.status, budget: s.result.budget, risk: s.result.risk };
+        recap = { score: s.result.score, foundCount: s.result.found.length, elapsed: s.result.elapsed, hints: s.result.hints };
       }
       const verifiedPhone = await phone(p.phoneCode);
       assert(verifiedPhone && /^[+0-9]{6,20}$/.test(verifiedPhone), 'PHONE', '手机号验证失败，请重新授权');
@@ -213,8 +219,9 @@ function createService({ store, now = Date.now, random = n => crypto.randomBytes
     async getMyActivity(p, uid) {
       const c = await campaign(p.campaignId, store, false), id = key(c._id, uid);
       const claim = await get('claims', id), lead = await get('leads', id);
+      const visitor = await get('visitors',id);
       const revoked = lead && lead.revokedAt ? await get('outbox', 'revoke_' + id) : null;
-      return { campaign: publicCampaign(c), claim: claim ? { id, title: claim.title, sections: claim.sections, createdAt: claim.createdAt } : null,
+      return { campaign: publicCampaign(c), duels:visitor && visitor.duels ? visitor.duels.slice().reverse() : [], claim: claim ? { id, title: claim.title, sections: claim.sections, createdAt: claim.createdAt } : null,
         lead: lead ? { ...safeLead(lead, await get('outbox', 'lead_' + id)), revocationState: revoked ? revoked.state : null } : null };
     }
   };

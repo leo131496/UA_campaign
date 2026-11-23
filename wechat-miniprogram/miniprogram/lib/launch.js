@@ -1,4 +1,5 @@
 const config = require('../config');
+const spot = require('./spot');
 const ID = /^[a-zA-Z0-9_-]{1,64}$/;
 const INVITE = /^[a-zA-Z0-9_-]{1,32}$/;
 function parse(options) {
@@ -17,11 +18,12 @@ function parse(options) {
   }
   return {
     campaignId: ID.test(query.campaign || '') ? query.campaign : config.campaignId,
-    inviteToken: INVITE.test(query.invite || '') ? query.invite : ''
+    inviteToken: INVITE.test(query.invite || '') ? query.invite : '',
+    duel: spot.decodeDuel(query.duel) ? query.duel : ''
   };
 }
-function sharePath(campaignId, token) {
+function sharePath(campaignId, token, duel) {
   if (!ID.test(campaignId) || !INVITE.test(token)) throw new Error('邀请参数尚未准备好');
-  return '/pages/activity/index?campaign=' + encodeURIComponent(campaignId) + '&invite=' + encodeURIComponent(token);
+  return '/pages/activity/index?campaign=' + encodeURIComponent(campaignId) + '&invite=' + encodeURIComponent(token) + (spot.decodeDuel(duel) ? '&duel=' + encodeURIComponent(duel) : '');
 }
 module.exports = { parse, sharePath };

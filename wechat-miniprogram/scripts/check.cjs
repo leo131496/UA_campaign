@@ -18,11 +18,8 @@ for (const file of walk(root)) {
   }
   if (file.endsWith('.json')) { JSON.parse(text); jsons++; }
 }
-const sourceEngine = fs.readFileSync(path.join(root, 'miniprogram/lib/engine.js'), 'utf8');
-const historicalEngine = path.join(root, '../game/engine.js');
-if (fs.existsSync(historicalEngine)) assert.equal(sourceEngine, fs.readFileSync(historicalEngine, 'utf8'), 'Historical engine drift');
-for (const copy of ['miniprogram/lib/engine.js', 'cloudfunctions/campaign/engine.js']) assert.equal(fs.readFileSync(path.join(root, copy), 'utf8'), sourceEngine, 'Engine drift: ' + copy);
 assert.equal(fs.readFileSync(path.join(root, 'cloudfunctions/campaign/store.js'), 'utf8'), fs.readFileSync(path.join(root, 'cloudfunctions/scrm-dispatch/store.js'), 'utf8'), 'Store adapter drift');
+assert.equal(fs.readFileSync(path.join(root, 'miniprogram/lib/spot.js'), 'utf8'), fs.readFileSync(path.join(root, 'cloudfunctions/campaign/spot.js'), 'utf8'), 'Spot rules drift');
 console.log('Static checks passed: ' + scripts + ' scripts, ' + jsons + ' JSON files; shared engines and adapters match.');
 if (process.argv.includes('--release')) {
   const config = require('../miniprogram/config'), project = require('../project.config.json');
