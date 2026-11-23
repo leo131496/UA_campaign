@@ -1,35 +1,30 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="项目急救局：拖动资源卡，在六回合内救回项目，与本地策略 AI 挑战同一关卡。无需填表即可玩。">
-  <meta name="theme-color" content="#18315a"><title>项目急救局 · AI 策略挑战</title>
-  <link rel="stylesheet" href="game/style.css?v=3"><script src="game/engine.js?v=3" defer></script><script src="game/app.js?v=3" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7fa">
+  <meta name="description" content="项目急救局手机端交互 Demo：直接挑战、AI 策略建议、领取工具包、自愿邀请和虚拟咨询。">
+  <title>项目急救局 · 手机端 Demo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2319365d'/%3E%3Cpath d='m37 10-20 28h15l-5 16 21-29H33z' fill='%23ff9871'/%3E%3C/svg%3E">
+  <style id="app-style"></style><style id="page-style"></style>
+  <link rel="stylesheet" href="phone-demo/preview.css?v=4">
+  <script src="phone-demo/native-source.js?v=4" defer></script>
+  <script src="phone-demo/preview.js?v=4" defer></script>
 </head>
 <body>
-<svg class="svg-library" aria-hidden="true"><defs>
-  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m14 2-9 12h6l-1 8 9-12h-6Z"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
-  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1 0 7M4 3v6h6"/></symbol>
-  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/></symbol>
-  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M5 11H3v10h18V11h-2"/></symbol>
-</defs></svg>
-<header class="site-header"><a class="logo" href="./"><span class="logo-mark">↯</span><span>项目急救局<small>AI 策略挑战</small></span></a><nav aria-label="辅助导航"><span class="made-for">BesChannels 互动获客原型</span><button data-modal="rules">怎么玩</button><button data-modal="business">企业怎么玩转它</button></nav></header>
-<main>
-  <section class="intro"><div><div class="mission-label"><span></span>一局六回合 · 不用填表，直接上场</div><h1>项目失控了。<br class="phone-break">轮到你救场。</h1><p>把资源卡投向三个模块，化解突发事件。看看你和策略 AI，谁能更快交付。</p></div><div class="intro-tools"><button class="outline-btn" id="new-mission"><svg class="icon"><use href="#i-refresh"/></svg>换个项目</button><span id="mission-id">关卡 #731024</span></div></section>
-  <div class="invite-banner" id="invite-banner" hidden></div>
-  <section class="hud" aria-label="当前游戏资源"><div class="hud-title"><span class="live-dot"></span><strong id="hud-stage">等待接管</strong><small id="hud-goal">三个模块达到 80 即可交付</small></div><div class="stat"><span class="stat-icon budget">◈</span><div><small>可用预算</small><strong id="budget">96</strong></div></div><div class="stat"><span class="stat-icon risk">!</span><div><small>项目风险</small><strong><span id="risk">22</span><em>/100</em></strong></div></div><div class="stat"><span class="stat-icon turns">◷</span><div><small>当前回合</small><strong><span id="round">1</span><em>/6</em></strong></div></div><div class="stat actions-stat"><span class="stat-icon actions">⚡</span><div><small>本回合行动</small><strong id="actions">● ●</strong></div></div></section>
-  <div class="game-layout"><div class="play-column">
-      <section class="board" aria-label="项目游戏棋盘"><div class="board-top"><div><span class="board-caption">救援指挥台</span><span class="board-level" id="board-level">软件项目 · 发布任务</span></div><button id="change-skin" class="board-button">换个行业皮肤</button></div><div class="board-guide" id="board-guide">拖动一张资源卡到模块，或点击卡牌后点选模块。</div><div class="stations" id="stations"></div><div class="board-footer"><span id="board-status">目标：完成 3 个模块，风险不触及 100。</span><span class="tiny-dot"></span><span id="automation-status">自动化在回合结束时结算</span></div><div class="start-overlay" id="start-overlay"><div class="start-chip"><svg class="icon"><use href="#i-bolt"/></svg>紧急接管邀请</div><h2>六回合，救回这个项目。</h2><p>预算有限，事件不断。<br>选卡、投放、看变化——每一步都算数。</p><button class="start-button" id="start-game">接管项目，立即开玩 <svg class="icon"><use href="#i-arrow"/></svg></button><span>无需注册 · 约 90 秒 · 可直接分享同一关卡</span></div></section>
-      <section class="hand-panel" aria-label="资源卡牌"><div class="hand-heading"><div><h2>你的资源手牌</h2><span>每次使用消耗 1 次行动，卡牌可重复使用</span></div><button id="coach" class="coach-button"><svg class="icon"><use href="#i-spark"/></svg>问问策略 AI</button></div><div class="cards" id="cards"></div><div class="hand-bottom"><span id="selection-hint">先接管项目，即可使用手牌。</span><button id="pass-turn" disabled>提前结束本回合 <span>›</span></button></div><div class="coach-note" id="coach-note" role="status" hidden></div></section>
-      <section class="result-panel" id="result-panel" hidden aria-live="polite"></section>
-    </div><aside class="side-column">
-      <section class="rival-panel"><div class="panel-label"><h2>你的对手</h2><span class="chip">同关 · 同规则</span></div><div class="rival-profile"><div class="bot-avatar"><span></span><span></span><i></i></div><div><h3>策略 AI</h3><p>会算资源，也会犯策略上的错</p></div></div><div id="rival-progress"></div><div class="rival-note" id="rival-note">你行动时，它也会推进自己的项目。</div><button class="plain-link" data-modal="ai">它是真 AI 还是固定脚本？</button></section>
-      <section class="event-panel"><div class="panel-label"><h2>项目事件</h2><button data-modal="events">查看全部</button></div><div id="event-preview"></div></section>
-      <section class="log-panel"><div class="panel-label"><h2>行动现场</h2><span id="log-count">等待行动</span></div><div id="game-log" aria-live="polite"></div></section>
-    </aside></div>
-  <footer class="site-footer"><span>玩法先行，服务承接在结算之后。预算、风险和成绩均为游戏数值。</span><div><button data-modal="operations">SCRM 运营预览</button><a href="docs/项目急救局-产品说明.md" download>产品说明</a><a href="previous/index.html">上一版原型</a></div></footer>
-</main>
-<dialog id="modal"><div class="modal-head"><h2 id="modal-title"></h2><button id="modal-close" aria-label="关闭">×</button></div><div class="modal-body" id="modal-body"></div></dialog><div id="toast" class="toast" role="status" hidden></div><div id="drag-ghost" class="drag-ghost" hidden></div>
-<noscript><div class="noscript">此小游戏需要 JavaScript。请使用现代浏览器并允许页面脚本运行。</div></noscript>
-</body></html>
+  <header class="preview-heading"><strong>项目急救局</strong><span>手机端交互 Demo</span></header>
+  <main id="phone" aria-label="手机交互演示">
+    <header class="native-nav"><button id="back" aria-label="返回上一页" hidden>‹</button><h1 id="page-title">项目急救局</h1><div class="nav-end"><button id="about">演示说明</button></div></header>
+    <div id="screen" class="screen"><div id="native-page"><div style="padding:40px;text-align:center;color:#7187a5">正在准备手机挑战…</div></div></div>
+    <nav id="tabs" aria-label="主导航">
+      <button data-tab="activity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v12H4zM8 8V4h8v4M4 13h16M10 12h4v3h-4z"/></svg>活动</button>
+      <button data-tab="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>我的资料</button>
+    </nav>
+  </main>
+  <footer class="preview-foot">浏览器交互预览 · 微信与 SCRM 功能仅模拟 · <a href="https://github.com/leo131496/UA_campaign/tree/main/wechat-miniprogram">开发交付</a></footer>
+  <dialog id="preview-dialog" aria-labelledby="dialog-title"><h2 id="dialog-title"></h2><p id="dialog-copy"></p><input id="dialog-link" aria-label="演示分享链接" readonly hidden><div class="dialog-actions"><button id="dialog-cancel">取消</button><button id="dialog-confirm">确定</button></div></dialog>
+  <div id="toast" role="status" hidden></div>
+  <noscript>请启用 JavaScript 后体验手机 Demo。</noscript>
+</body>
+</html>
