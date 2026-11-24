@@ -19,7 +19,7 @@
   const rules=difficulty(r.config,r.players.length,r.level);
   r.status='playing';r.notice='';r.game={rules,deadline:now+r.config.duration*1000,contribution:Object.fromEntries(r.players.map(p=>[p.id,0])),matched:[],open:[],revealUntil:0,flips:0,question:0,votes:{},answered:false,correct:false,misses:0,lanes:{}};
   r.game.cards=shuffle(Array.from({length:rules.pairs*2},(_,i)=>({pair:i%rules.pairs,item:i%rules.pairs%4,variant:Math.floor(i%rules.pairs/4)+1})),r.config.seed+r.level*101);
-  if(r.config.engine==='adventure')r.game.expedition=A.create(r);
+  if(['adventure','circuit'].includes(r.config.engine))r.game.expedition=A.create(r);
   r.players.forEach(p=>{r.game.lanes[p.id]={hits:0,wave:0,popped:[],slots:slots(r,p.id,0)};});
  }
  function settle(r,passed,now){
@@ -46,14 +46,14 @@
    else if(a.type==='remove'){need(host&&r.status==='lobby'&&a.playerId!==r.host,'开局前由队长管理好友');need(r.players.some(p=>p.id===a.playerId),'好友不存在');r.players=r.players.filter(p=>p.id!==a.playerId);delete r.totals[a.playerId];}
    else if(a.type==='leave'){need(r.status==='lobby'&&!host,'开局后成员已锁定；可返回查看或等待本局结束');r.players=r.players.filter(p=>p.id!==a.actor);delete r.totals[a.actor];}
    else if(a.type==='start'){need(host&&r.status==='lobby','只有队长能开始本局');need(r.solo||r.players.length>=2,'至少邀请 1 位好友，或返回选择单人');need(r.players.every(p=>p.ready),'还有好友未准备');begin(r,now);}
-   else if(a.type==='relic'){need(host&&r.status==='between'&&r.config.engine==='adventure','过关后由队长选择强化');need(!r.relicChoices[r.level],'本关强化已选择');need(A.relics.some(x=>x.id===a.relic),'强化不存在');need(a.relic!=='prism'||!r.relics.includes('prism'),'已拥有解码棱镜，请选择其他强化');r.relics.push(a.relic);r.relicChoices[r.level]=a.relic;}
+   else if(a.type==='relic'){need(host&&r.status==='between'&&r.config.engine==='adventure','过关后由队长选择强化');need(!r.relicChoices[r.level],'本关强化已选择');need(A.relics.some(x=>x.id===a.relic),'强化不存在');need(a.relic!=='prism'||!r.relics.includes('prism'),'已拥有节能晶片，请选择其他强化');r.relics.push(a.relic);r.relicChoices[r.level]=a.relic;}
    else if(a.type==='next'){need(host&&r.status==='between','等待队长开始下一关');need(r.config.engine!=='adventure'||r.relicChoices[r.level],'先为下一关选择一项强化');r.level++;begin(r,now);}
    else if(a.type==='end'){need(host&&r.status==='playing','只有队长可提前结束当前挑战');settle(r,false,now);}
    else if(a.type==='tick'){if(r.status==='playing'&&r.game.revealUntil&&now>=r.game.revealUntil){r.game.open=[];r.game.revealUntil=0;}else return room;}
    else {
     need(r.status==='playing','当前不是游戏阶段');
     const g=r.game;
-    if(r.config.engine==='adventure'){const outcome=A.step(r,a);if(outcome)settle(r,outcome==='passed',now);}
+    if(['adventure','circuit'].includes(r.config.engine)){const outcome=A.step(r,a);if(outcome)settle(r,outcome==='passed',now);}
     else if(a.type==='flip'){
      need(r.config.engine==='memory','玩法不匹配');need(Number.isInteger(a.index)&&g.cards[a.index],'卡牌不存在');
      if(g.revealUntil&&now>=g.revealUntil){g.open=[];g.revealUntil=0;}

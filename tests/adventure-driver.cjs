@@ -1,5 +1,5 @@
 // Test-only route planner: drives the public action interface without modifying game state.
-const A=require('../studio/adventure');
+const A=require('../studio/adventure'),C=require('../studio/circuit');
 function pathTo(e,target){
  const queue=[{pos:e.pos,cost:0,path:[]}],seen=new Set();
  while(queue.length){queue.sort((a,b)=>a.cost-b.cost);const node=queue.shift();if(seen.has(node.pos))continue;seen.add(node.pos);if(node.pos===target)return node;
@@ -9,7 +9,7 @@ function pathTo(e,target){
 function nextAction(r){const e=r.game.expedition,p=A.turnPlayer(r),team=r.players.length>1,role=A.roles[r.players.indexOf(p)%3];
  if(!e.skills[p.id]&&(role.skill==='charge'||!team)&&e.energy<=e.maxEnergy-5)return {type:'skill',skill:'charge'};
  if(team&&!e.skills[p.id]&&role.skill==='shield'&&e.phase==='map')return {type:'skill',skill:'shield'};
- if(e.phase==='core'){const path=A.circuitPath(e.rings,e.target,e.coupled);if(!path?.length)throw Error('No solvable circuit');return {type:'rotate',index:path[0]};}
+ if(e.phase==='core'){const path=C.solutionPath(e.circuit);if(!path?.length)throw Error('No solvable circuit');return {type:'rotate',index:path[0]};}
  let targets=e.tiles.map((t,i)=>({t,i})).filter(({t})=>!t.used&&(t.type==='shard'&&(!t.locked||e.switchOn)||t.type==='switch'));
  if(e.energy<e.maxEnergy-6)targets.push(...e.tiles.map((t,i)=>({t,i})).filter(({t})=>t.type==='supply'&&!t.used));
  if(e.shards===e.required)targets.push({i:e.gate});

@@ -1,6 +1,7 @@
 (function(root,factory){const value=factory();if(typeof module==='object'&&module.exports)module.exports=value;else root.CampaignModel=value;})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const engines=[
+    {id:'circuit',name:'点亮灯泡',verb:'旋转导线，接通电源，点亮全部灯泡',description:'从小电路到分支电网，和好友一起接通每一盏灯。',tag:'电路解谜',icon:'☼'},
     {id:'adventure',name:'星岛远征',verb:'规划路线，收集光片，解开星门',description:'带着有限能量穿越遗迹，选择强化，与好友分工解码。',tag:'策略冒险',icon:'◈'},
     {id:'memory',name:'记忆翻牌',verb:'翻开卡牌，找出相同图案',description:'记住品牌元素，把相同卡牌配成一对。',tag:'轻松互动',icon:'▦'},
     {id:'collect',name:'灵感收集',verb:'点亮目标，避开灰色干扰',description:'各自收集目标，协作通关后积分翻倍。',tag:'手速挑战',icon:'✦'},
@@ -34,7 +35,7 @@
   }
   function preset(id,engine='memory'){
     const i=industries.find(x=>x.id===id)||industries[0];
-    return {schemaVersion:2,engine,industry:i.name,industryId:i.id,brand:i.brand,title:i.title,reward:i.reward,topic:i.topic,color:i.color,items:[...i.items],emoji:[...i.emoji],questions:quizFor(i.id),duration:engine==='adventure'?300:60,adventure:{pressure:'standard',guide:true},shareMode:'challenge',seed:72103,stock:200,consent:true,tag:i.name+' · 活动兴趣',owner:'按 SCRM 现有分配规则',brandStory:'玩一局，发现一点新灵感。感兴趣时，再来了解我们。',source:'manual',team:{maxFriends:5,soloBase:100,teamBase:200,multiplier:2,levels:3}};
+    return {schemaVersion:2,engine,industry:i.name,industryId:i.id,brand:i.brand,title:i.title,reward:i.reward,topic:i.topic,color:i.color,items:[...i.items],emoji:[...i.emoji],questions:quizFor(i.id),duration:['adventure','circuit'].includes(engine)?300:60,adventure:{pressure:'standard',guide:true},shareMode:'challenge',seed:72103,stock:200,consent:true,tag:i.name+' · 活动兴趣',owner:'按 SCRM 现有分配规则',brandStory:'玩一局，发现一点新灵感。感兴趣时，再来了解我们。',source:'manual',team:{maxFriends:5,soloBase:100,teamBase:200,multiplier:2,levels:3}};
   }
   const copy=x=>JSON.parse(JSON.stringify(x));
   const clean=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
@@ -74,17 +75,17 @@
   function plan(prompt,current){
     const text=clean(prompt,800);
     if(text.length<8)return {error:'请补充活动对象和玩法，例如：通用品牌活动，单人轻松翻牌，最多邀请 5 位好友组队，通关积分翻倍。'};
-    if(/(3D|3d|赛车|射击|大型|开放世界|重力感应)/.test(text))return {error:'这个想法需要新增玩法能力。当前可生成星岛远征、翻牌、收集和知识闯关，并演示最多 6 人协作；全新引擎需开发与小程序审核。',capabilityGap:true};
+    if(/(3D|3d|赛车|射击|大型|开放世界|重力感应)/.test(text))return {error:'这个想法需要新增玩法能力。当前可生成点亮灯泡、星岛远征、翻牌、收集和知识闯关，并演示最多 6 人协作；全新引擎需开发与小程序审核。',capabilityGap:true};
     const patterns=[['general',/通用|不限行业|全行业/],['manufacturing',/工业|制造|工厂|传感器|样品|机械/],['software',/软件|SaaS|saas|云服务|企业服务/],['education',/教育|课程|学员|培训|学习/],['health',/医疗|健康|医院/],['finance',/金融|保险|理财/],['retail',/零售|门店|消费|咖啡|新品/],['travel',/文旅|展会|旅游|参观|景区/],['services',/专业服务|咨询服务/],['agriculture',/农业|食品|农场/],['living',/家居|地产|装修/],['mobility',/汽车|出行|能源/]];
     const id=(patterns.find(([,r])=>r.test(text))||[])[0];
     const c=id?preset(id,current&&current.engine||'memory'):copy(current||preset('general'));
     if(current&&id)c.team=copy(current.team);
-    c.engine=/冒险|远征|遗迹|机关|路线/.test(text)?'adventure':/翻牌|配对|记忆/.test(text)?'memory':/收集|手速|气泡|点击/.test(text)?'collect':/答题|知识|科普/.test(text)?'quiz':c.engine;
+    c.engine=/灯泡|点灯|电路|导电|导线|接线/.test(text)?'circuit':/冒险|远征|遗迹|机关|路线/.test(text)?'adventure':/翻牌|配对|记忆/.test(text)?'memory':/收集|手速|气泡|点击/.test(text)?'collect':/答题|知识|科普/.test(text)?'quiz':c.engine;
     const cap=text.match(/(?:最多|上限|邀请|添加)\s*([0-9]+)\s*位?个?好友/);if(cap){if(Number(cap[1])>5)return {error:'最多支持添加 5 位好友，即发起人加好友共 6 人。请调整人数。'};c.team.maxFriends=Number(cap[1]);}
     if(/只.*单人|关闭组队/.test(text))c.team.maxFriends=0;
     const multi=text.match(/(?:通关|积分)[^。\n]{0,8}?(?:乘|×|x|翻)\s*([2-5])\s*倍?/);if(multi)c.team.multiplier=Number(multi[1]);else if(/翻倍/.test(text))c.team.multiplier=2;
     for(const [key,pattern] of [['soloBase',/单人(?:基础|每关|积分|得分|\s)*([0-9]+)\s*分/],['teamBase',/(?:组队|多人)(?:基础|每人|每关|积分|得分|\s)*([0-9]+)\s*分/]]){const match=text.match(pattern);if(match)c.team[key]=Number(match[1]);}
-    if(c.engine==='adventure'&&c.duration<180)c.duration=300;
+    if(['adventure','circuit'].includes(c.engine)&&c.duration<180)c.duration=300;
     if(/烧脑|困难|高手/.test(text))c.adventure.pressure='expert';else if(/入门|宽松/.test(text))c.adventure.pressure='relaxed';
     if(/关闭提示/.test(text))c.adventure.guide=false;
     const time=text.match(/(30|60|90|180|300|480)\s*秒/);if(time)c.duration=Number(time[1]);else if(/一分钟/.test(text))c.duration=60;
