@@ -1,7 +1,7 @@
 // Local demo transport: Web Locks serialize same-browser tabs; no cross-device server is connected.
 (function(){
  'use strict';
- const prefix='ua-team-room-v7:',listeners=new Set();
+ const prefix='ua-team-room-v8:',listeners=new Set();
  const id=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
  function read(roomId){if(!/^[\w-]{1,80}$/.test(roomId))return null;try{const value=JSON.parse(localStorage.getItem(prefix+roomId)||'null');return value&&value.expiresAt>Date.now()?value:null;}catch(_){return null;}}
  function save(room){localStorage.setItem(prefix+room.id,JSON.stringify(room));listeners.forEach(fn=>fn(room));return room;}

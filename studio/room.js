@@ -1,4 +1,4 @@
-(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./model'));else root.CampaignRoom=factory(root.CampaignModel);})(typeof globalThis!=='undefined'?globalThis:this,function(M){
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./model'),require('./adventure'));else root.CampaignRoom=factory(root.CampaignModel,root.CampaignAdventure);})(typeof globalThis!=='undefined'?globalThis:this,function(M,A){
  'use strict';
  const ID=/^[a-zA-Z0-9_-]{1,80}$/;
  const need=(ok,message)=>{if(!ok)throw new Error(message);};
@@ -11,7 +11,7 @@
  }
  function create(config,id,actor,name,now=Date.now(),solo=false){
   const c=M.normalize(config);need(!M.validate(c).length,'活动配置不完整');need(ID.test(id)&&ID.test(actor),'房间标识无效');
-  return {id,config:c,host:actor,solo,players:[{id:actor,name:String(name||'我').slice(0,20),bot:false,ready:true}],status:'lobby',level:1,revision:0,createdAt:now,expiresAt:now+7200000,game:null,totals:{[actor]:0},ledger:[],seen:[],notice:''};
+  return {id,config:c,host:actor,solo,players:[{id:actor,name:String(name||'我').slice(0,20),bot:false,ready:true}],status:'lobby',level:1,revision:0,createdAt:now,expiresAt:now+7200000,game:null,totals:{[actor]:0},ledger:[],relics:[],relicChoices:{},seen:[],notice:''};
  }
  function shuffle(items,seed){const r=M.random(seed);for(let i=items.length-1;i;i--){const j=Math.floor(r()*(i+1));[items[i],items[j]]=[items[j],items[i]];}return items;}
  function slots(room,actor,wave){const limit=room.game.rules.goodSlots;return shuffle(Array.from({length:9},(_,i)=>({good:i<limit,item:i%4})),room.config.seed+room.level*97+room.players.findIndex(p=>p.id===actor)*23+wave*51);}
@@ -19,6 +19,7 @@
   const rules=difficulty(r.config,r.players.length,r.level);
   r.status='playing';r.notice='';r.game={rules,deadline:now+r.config.duration*1000,contribution:Object.fromEntries(r.players.map(p=>[p.id,0])),matched:[],open:[],revealUntil:0,flips:0,question:0,votes:{},answered:false,correct:false,misses:0,lanes:{}};
   r.game.cards=shuffle(Array.from({length:rules.pairs*2},(_,i)=>({pair:i%rules.pairs,item:i%rules.pairs%4,variant:Math.floor(i%rules.pairs/4)+1})),r.config.seed+r.level*101);
+  if(r.config.engine==='adventure')r.game.expedition=A.create(r);
   r.players.forEach(p=>{r.game.lanes[p.id]={hits:0,wave:0,popped:[],slots:slots(r,p.id,0)};});
  }
  function settle(r,passed,now){
@@ -45,13 +46,15 @@
    else if(a.type==='remove'){need(host&&r.status==='lobby'&&a.playerId!==r.host,'开局前由队长管理好友');need(r.players.some(p=>p.id===a.playerId),'好友不存在');r.players=r.players.filter(p=>p.id!==a.playerId);delete r.totals[a.playerId];}
    else if(a.type==='leave'){need(r.status==='lobby'&&!host,'开局后成员已锁定；可返回查看或等待本局结束');r.players=r.players.filter(p=>p.id!==a.actor);delete r.totals[a.actor];}
    else if(a.type==='start'){need(host&&r.status==='lobby','只有队长能开始本局');need(r.solo||r.players.length>=2,'至少邀请 1 位好友，或返回选择单人');need(r.players.every(p=>p.ready),'还有好友未准备');begin(r,now);}
-   else if(a.type==='next'){need(host&&r.status==='between','等待队长开始下一关');r.level++;begin(r,now);}
+   else if(a.type==='relic'){need(host&&r.status==='between'&&r.config.engine==='adventure','过关后由队长选择强化');need(!r.relicChoices[r.level],'本关强化已选择');need(A.relics.some(x=>x.id===a.relic),'强化不存在');need(a.relic!=='prism'||!r.relics.includes('prism'),'已拥有解码棱镜，请选择其他强化');r.relics.push(a.relic);r.relicChoices[r.level]=a.relic;}
+   else if(a.type==='next'){need(host&&r.status==='between','等待队长开始下一关');need(r.config.engine!=='adventure'||r.relicChoices[r.level],'先为下一关选择一项强化');r.level++;begin(r,now);}
    else if(a.type==='end'){need(host&&r.status==='playing','只有队长可提前结束当前挑战');settle(r,false,now);}
    else if(a.type==='tick'){if(r.status==='playing'&&r.game.revealUntil&&now>=r.game.revealUntil){r.game.open=[];r.game.revealUntil=0;}else return room;}
    else {
     need(r.status==='playing','当前不是游戏阶段');
     const g=r.game;
-    if(a.type==='flip'){
+    if(r.config.engine==='adventure'){const outcome=A.step(r,a);if(outcome)settle(r,outcome==='passed',now);}
+    else if(a.type==='flip'){
      need(r.config.engine==='memory','玩法不匹配');need(Number.isInteger(a.index)&&g.cards[a.index],'卡牌不存在');
      if(g.revealUntil&&now>=g.revealUntil){g.open=[];g.revealUntil=0;}
      need(!g.revealUntil,'记住这两张卡，再继续');need(!g.matched.includes(g.cards[a.index].pair)&&!g.open.some(x=>x.index===a.index),'这张卡已经翻开');
